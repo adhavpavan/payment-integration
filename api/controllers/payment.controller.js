@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+require('dotenv').config();
 
 function verifyWebhookSignature(secret, body, signature) {
   const expectedSignature = crypto.createHmac('sha256', secret).update(body, 'utf8').digest('hex');
@@ -8,12 +9,11 @@ function verifyWebhookSignature(secret, body, signature) {
 
 const razorPayPayment = async (req, res) => {
   console.log("-----------------received data from razorpay-------------------", req.body)
-  const secret = 'ergfg8e65ft86wess675se'; // Replace with your actual webhook secret
   const body = JSON.stringify(req.body);
   console.log("----------data------", JSON.stringify(body))
   const signature = req.get('X-Razorpay-Signature');
 
-  if (!verifyWebhookSignature(secret, body, signature)) {
+  if (!verifyWebhookSignature(process.env.RAZORPAY_WEBHOOK_SECRET, body, signature)) {
     console.error('Webhook signature verification failed');
     return res.status(403).send('Invalid webhook signature');
   }
@@ -21,13 +21,12 @@ const razorPayPayment = async (req, res) => {
   res.json({ status: 'ok' })
 };
 
-const endpointSecret = "whsec_E1tJgEgMxK2Kv4irlmAuJDNJGqWho1z0";
 const stripePayment = async (req, res) => {
   console.log("-----------------received data from stripe-------------------", req.body)
   const sig = req.headers['stripe-signature'];
   let event;
   try {
-    event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
+    event = stripe.webhooks.constructEvent(request.body, sig, process.env.Emailid);
     console.log(` event received ${event.type}`, event);
   } catch (err) {
     res.status(400).send(`Webhook Error: ${err.message}`);
@@ -36,7 +35,7 @@ const stripePayment = async (req, res) => {
   res.json({ status: 'ok' })
 };
 
-const stripe = require("stripe")('sk_test_51PIiC8SHPAWrfFFlCwZEC8Nzn0dzNVzOscUXTwopNaI6eNZoPWbMoHcuvcX6LqRLfZ3NGkWG7M71Oadw06Fi1FvV00EKfT1519');
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const createStripePaymentIntent = async (req, res) => {
   const { amount } = req.body;
   console.log("-----------------", amount)
