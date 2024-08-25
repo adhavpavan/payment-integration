@@ -1,5 +1,8 @@
 const crypto = require('crypto');
+const getRawBody = require('raw-body');
 require('dotenv').config();
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
 
 function verifyWebhookSignature(secret, body, signature) {
   const expectedSignature = crypto.createHmac('sha256', secret).update(body, 'utf8').digest('hex');
@@ -22,20 +25,19 @@ const razorPayPayment = async (req, res) => {
 };
 
 const stripePayment = async (req, res) => {
-  console.log("-----------------received data from stripe-------------------", req.body)
+  console.log("-----------------received data from stripe-------------------", req.body )
   const sig = req.headers['stripe-signature'];
   let event;
   try {
-    event = stripe.webhooks.constructEvent(request.body, sig, process.env.Emailid);
+    event = stripe.webhooks.constructEvent( req.rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
     console.log(` event received ${event.type}`, event);
   } catch (err) {
     res.status(400).send(`Webhook Error: ${err.message}`);
     return;
   }
-  res.json({ status: 'ok' })
+  res.status(200).json({ status: 'ok' })
 };
 
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const createStripePaymentIntent = async (req, res) => {
   const { amount } = req.body;
   console.log("-----------------", amount)

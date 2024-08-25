@@ -5,22 +5,23 @@ const httpStatus = require('http-status');
 const routes = require('./routes/v1');
 
 const app = express();
-process
-  .on('unhandledRejection', (reason, p) => {
-    console.error(reason, 'Unhandled Rejection at Promise', p);
-  })
-  .on('uncaughtException', (err) => {
-    console.error(err, 'Uncaught Exception thrown');
-  });
 
-// set security HTTP headers
-app.use(helmet());
+// app.use(
+//   express.raw({type: 'application/json'})
+// );
 
 // parse json request body
+app.use(
+  express.json({
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 app.use(express.json());
 
 // parse urlencoded request body
-app.use(express.urlencoded({ extended: true }));
+// app.use(express.urlencoded({ extended: true }));
 
 // enable cors
 app.use(cors());
